@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>VDS-Lab HMI Control Panel</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: row;
+      height: 100vh;
+    }
+    .sidebar {
+      width: 300px;
+      background: #2c3e50;
+      color: white;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: #ecf0f1;
+    }
+    .main h1 {
+      margin: 0;
+      padding: 20px;
+      background: #34495e;
+      color: white;
+    }
+    .controls {
+      padding: 20px;
+    }
+    .controls button {
+      padding: 10px 20px;
+      margin: 10px;
+      font-size: 16px;
+    }
+    .status-ok { color: #2ecc71; font-weight: bold; }
+    .status-error { color: #e74c3c; font-weight: bold; }
+    .status-warn { color: #f1c40f; font-weight: bold; }
+    .heartbeat {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      background: #2ecc71;
+      border-radius: 50%;
+      margin-left: 10px;
+      animation: pulse 1s infinite;
+    }
+    @keyframes pulse {
+      0% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.4); opacity: 0.5; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .goose-log {
+      flex: 1;
+      background: #ffffff;
+      padding: 10px;
+      overflow-y: auto;
+      border-top: 2px solid #ccc;
+      font-family: monospace;
+    }
+    .goose-entry {
+      padding: 5px 0;
+      border-bottom: 1px solid #ddd;
+    }
+    #alarm-banner {
+      display: none;
+      background: #e74c3c;
+      color: white;
+      padding: 10px;
+      text-align: center;
+      font-weight: bold;
+    }
+	.log-column {
+	  flex: 1;
+	  display: flex;
+	  flex-direction: column;
+	  border-top: 2px solid #ccc;
+	  background: #ffffff;
+	  font-family: monospace;
+	  margin-right: 5px;
+	  box-sizing: border-box;
+	  max-height: 300px;
+	  overflow-y: auto;
+	}
+	.log-header {
+	  background: #f4f4f4;
+	  padding: 6px 10px;
+	  font-weight: bold;
+	  border-bottom: 1px solid #ccc;
+	  position: sticky;
+	  top: 0;
+	  z-index: 1;
+	}
+
+	.log-body {
+	  overflow-y: auto;
+	  flex: 1;
+	  padding: 10px;
+	}
+	
+	.status-light {
+    font-weight: bold;
+    padding: 2px 6px;
+    border-radius: 6px;
+    }
+
+   .green-light {
+    background-color: #c8facc;
+    color: #116611;
+    }
+
+   .red-light {
+    background-color: #ffcaca;
+    color: #991111;
+    }
+
+   .yellow-light {
+    background-color: #fff4c4;
+    color: #886a00;
+    }
+
+  </style>
+</head>
+<body>
+  <div class="sidebar" style="max-height: 100vh; overflow-y: auto; padding-right: 6px;">
+	<h2>Status</h2>
+	<div id="breaker-status" class="status-warn">Breaker: UNKNOWN <span class="heartbeat"></span></div>
+	<div id="last-updated">Last Updated: -</div>
+	<h3 style="margin-top: 20px;">System Health</h3>
+	<table id="component-health" style="width: 100%; font-size: 0.9em; border-spacing: 6px;">
+	  <tr><td><strong>GUI</strong></td><td align="right"><span id="health-gui">...</span></td></tr>
+	  <tr><td><strong>SCADA</strong></td><td align="right"><span id="health-scada">...</span></td></tr>
+	  <tr><td><strong>RTU</strong></td><td align="right"><span id="health-rtu">...</span></td></tr>
+	  <tr><td><strong>C-IED1</strong></td><td align="right"><span id="health-ied">...</span></td></tr>
+	  <tr><td><strong>C-IED2</strong></td><td align="right"><span id="health-ied2">...</span></td></tr>
+	  <tr><td><strong>P-IED1</strong></td><td align="right"><span id="health-p_ied1">...</span></td></tr>
+	  <tr><td><strong>P-IED2</strong></td><td align="right"><span id="health-p_ied2">...</span></td></tr>
+	  <tr><td><strong>Breaker</strong></td><td align="right"><span id="health-breaker">...</span></td></tr>
+	  <tr><td>Active C-IED:</td><td align="right"><span id="active-ied">...</span></td></tr>
+	</table>
+	
+	<div id="sv-health-line" style="margin-bottom: 6px;">
+		<div id="last-trip-info" style="margin-bottom: 10px;">
+		  <strong>Last TRIP:</strong> <span id="trip-source">---</span>
+		</div>
+	</div>
+
+
+	<h3 style="margin-top: 20px;">MMS Status</h3>
+	<table style="width: 100%; font-size: 0.85em; border-spacing: 6px;" id="mms-status-table">
+	  <tr><td>Breaker State:</td><td align="right"><span id="mms-stVal" class="status-light">--</span></td></tr>
+	  <tr><td>Last Cmd:</td><td align="right"><span id="mms-ctlVal">--</span></td></tr>
+	  <tr><td>IED Mode:</td><td align="right"><span id="mms-mode">--</span></td></tr>
+	  <tr><td>SV Quality:</td><td align="right"><span id="mms-sv-quality" class="status-light">--</span></td></tr>
+	  <tr><td>SV Rate:</td><td align="right"><span id="mms-sv-rate">--</span> Hz</td></tr>
+	</table>
+	<h3 style="margin-top: 20px;">MMXU1 Measurements</h3>
+	<table style="width: 100%; font-size: 0.85em; border-spacing: 6px;">
+	  <tr><td>V<sub>A</sub>:</td><td align="right"><span id="mmxu-v-a">--</span> V</td></tr>
+	  <tr><td>V<sub>B</sub>:</td><td align="right"><span id="mmxu-v-b">--</span> V</td></tr>
+	  <tr><td>V<sub>C</sub>:</td><td align="right"><span id="mmxu-v-c">--</span> V</td></tr>
+	  <tr><td>I<sub>A</sub>:</td><td align="right"><span id="mmxu-i-a">--</span> A</td></tr>
+	  <tr><td>I<sub>B</sub>:</td><td align="right"><span id="mmxu-i-b">--</span> A</td></tr>
+	  <tr><td>I<sub>C</sub>:</td><td align="right"><span id="mmxu-i-c">--</span> A</td></tr>
+	  <tr><td>Frequency:</td><td align="right"><span id="mmxu-freq">--</span> Hz</td></tr>
+	  <tr><td>SV Time:</td><td align="right"><span id="sv-timestamp">--</span></td></tr>
+	</table>
+
+
+
+  </div>
+
+  <div class="main">
+    <h1>VDS-Lab Digital Substation HMI</h1>
+	<div id="startup-banner" style="background: #f1c40f; color: #000; text-align: center; padding: 8px; display: none;">
+	  🟡 Initialising system...
+	</div>
+
+    <div id="alarm-banner">
+      ⚠️ Breaker Fault Detected – Mismatch Between Commanded and Actual State
+    </div>
+	<div id="spoof-banner" style="display: none; background-color: #ff6666; color: white; padding: 10px; text-align: center; font-weight: bold;">
+	  ⚠️ Spoofed GOOSE Detected!
+	</div>
+
+	<div id="scada-warning" style="display:none; background-color: #ffcccc; padding: 10px; border-radius: 5px; margin-bottom: 10px; font-weight: bold;">
+    ⚠️ SCADA is currently offline. TRIP and RESET are disabled.
+	</div>
+	<div id="lockout-warning" style="display: none; background-color: #ffcc00; color: black; padding: 10px; font-weight: bold; text-align: center;">
+	  ⚠️ One or more protection IEDs are in lockout mode!
+	</div>
+
+
+	<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+	  <!-- Left: TRIP/RESET and Fault Toggle -->
+	  <div class="controls">
+		<button id="trip-btn" onclick="sendCommand('TRIP')">TRIP</button>
+		<button id="reset-btn" onclick="sendCommand('RESET')">RESET</button>
+		<label style="margin-left: 10px;">
+		  <input type="checkbox" id="faultToggle" onchange="toggleFaultMode()"> Simulate Stuck Breaker
+		</label>
+	  </div>
+
+	  <!-- Right: IDS Buttons -->
+	  <div class="controls">
+		<button onclick="startCapture()">Start Capture</button>
+		<button onclick="stopCapture()">Stop Capture</button>
+		<button onclick="window.open('http://ids:5005/report', '_blank')">View Report</button>
+		<span id="ids-status-indicator" class="status-light yellow-light" style="margin-left: 12px;">IDS: UNKNOWN</span>
+	  </div>
+	</div>
+
+	<div id="recording-status" style="font-weight: bold; color: red; margin-bottom: 10px;"></div>
+
+
+
+    <!-- Network Diagram -->
+    <div class="network-diagram" style="padding: 20px;">
+		<svg width="100%" height="340">
+		  <defs>
+			<marker id="arrow" markerWidth="10" markerHeight="10" refX="10" refY="3" orient="auto">
+			  <path d="M0,0 L0,6 L9,3 z" fill="#333" />
+			</marker>
+		  </defs>
+
+		  <!-- Bus Zones -->
+		  <rect x="0" y="0" width="100%" height="90" fill="#ecf0f1" />
+		  <text x="10" y="20" fill="#7f8c8d" font-size="12">Station Bus</text>
+
+		  <rect x="0" y="90" width="100%" height="90" fill="#dfe6e9" />
+		  <text x="10" y="110" fill="#7f8c8d" font-size="12">Bay Level Bus</text>
+
+		  <rect x="0" y="180" width="100%" height="90" fill="#ccddee" />
+		  <text x="10" y="200" fill="#7f8c8d" font-size="12">Process Bus</text>
+
+		  <!-- Devices -->
+		  <rect x="60" y="30" width="100" height="40" rx="10" fill="#3498db" />
+		  <text x="110" y="55" fill="white" font-size="12" text-anchor="middle">HMI</text>
+
+		  <rect x="200" y="30" width="100" height="40" rx="10" fill="#3498db" />
+		  <text x="250" y="55" fill="white" font-size="12" text-anchor="middle">SCADA</text>
+
+		  <rect x="130" y="120" width="100" height="40" rx="10" fill="#2980b9" />
+		  <text x="180" y="145" fill="white" font-size="12" text-anchor="middle">RTU</text>
+
+		  <!-- Control IED1 -->
+		  <rect id="ied1-box" x="270" y="120" width="80" height="40" rx="10" fill="#2980b9" stroke="#bbb" stroke-width="2" />
+		  <text x="310" y="145" fill="white" font-size="12" text-anchor="middle">C-IED1</text>
+
+		  <!-- Control IED2 -->
+		  <rect id="ied2-box" x="370" y="120" width="80" height="40" rx="10" fill="#2980b9" stroke="#bbb" stroke-width="2" />
+		  <text x="410" y="145" fill="white" font-size="12" text-anchor="middle">C-IED2</text>
+
+		  <!-- Protection IED 1 -->
+		  <rect x="470" y="120" width="90" height="40" rx="10" fill="#c0392b" />
+		  <text x="515" y="145" fill="white" font-size="12" text-anchor="middle">P-IED1</text>
+
+		  <!-- Protection IED 2 -->
+		  <rect x="580" y="120" width="90" height="40" rx="10" fill="#c0392b" />
+		  <text x="625" y="145" fill="white" font-size="12" text-anchor="middle">P-IED2</text>
+
+
+		  <!-- Breaker -->
+		  <rect x="200" y="210" width="120" height="40" rx="10" id="breaker-box" fill="#95a5a6" />
+		  <text x="260" y="235" fill="white" font-size="12" text-anchor="middle" id="breaker-label">Breaker</text>
+
+		  <!-- Merging Unit -->
+		  <rect id="mu-box" x="380" y="210" width="100" height="40" rx="10" fill="#8e44ad" />
+		  <text x="430" y="235" fill="white" font-size="12" text-anchor="middle">MU</text>
+
+		  <!-- Static Arrows -->
+		  <line x1="160" y1="70" x2="180" y2="120" stroke="#333" stroke-width="2" marker-end="url(#arrow)" />
+		  <line x1="250" y1="70" x2="180" y2="120" stroke="#333" stroke-width="2" marker-end="url(#arrow)" />
+
+		  <!-- Communication Paths -->
+		  <line id="ied1-line" x1="250" y1="70" x2="310" y2="120" stroke="#bbb" stroke-width="2" marker-end="url(#arrow)" />
+		  <line id="ied2-line" x1="250" y1="70" x2="410" y2="120" stroke="#bbb" stroke-width="2" marker-end="url(#arrow)" />
+
+		  <line id="ied1-breaker" x1="310" y1="160" x2="260" y2="210" stroke="#bbb" stroke-width="2" marker-end="url(#arrow)" />
+		  <line id="ied2-breaker" x1="410" y1="160" x2="260" y2="210" stroke="#bbb" stroke-width="2" marker-end="url(#arrow)" />
+		  <line x1="515" y1="160" x2="260" y2="210" stroke="#c0392b" stroke-width="2" marker-end="url(#arrow)" />
+		  <line x1="625" y1="160" x2="260" y2="210" stroke="#c0392b" stroke-width="2" marker-end="url(#arrow)" />
+
+		</svg>
+
+    </div>
+
+	<div style="display: flex; flex: 1; overflow: hidden; max-height: 300px;">
+	  <div class="log-column">
+		<div class="log-header">GOOSE Messages:</div>
+		<div id="goose-log" class="log-body"></div>
+	  </div>
+	  <div class="log-column">
+		<div class="log-header">System Logs:</div>
+		<div id="log-list" class="log-body"></div>
+	  </div>
+	</div>
+
+
+  </div>
+
+  <script>
+	function updateComponentHealth() {
+	  fetch('/health-overview-proxy')
+		.then(res => res.json())
+		.then(data => {
+		  for (const [key, value] of Object.entries(data)) {
+			const el = document.getElementById(`health-${key}`);
+			el.textContent = value ? "🟢 OK" : "🔴 DOWN";
+			el.style.color = value ? "#2ecc71" : "#e74c3c";
+		  }
+		});
+	}
+	
+	function loadFaultMode() {
+	  fetch('/breaker/fault-mode')
+		.then(res => res.json())
+		.then(data => {
+		  document.getElementById('faultToggle').checked = data.enabled;
+		});
+	}
+
+	function toggleFaultMode() {
+	  const enabled = document.getElementById('faultToggle').checked;
+	  fetch('/breaker/fault-mode', {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify({ enabled })
+	  });
+	}
+
+    function sendCommand(cmd) {
+      fetch('/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ command: cmd })
+      });
+    }
+
+	function updateStatus() {
+	  fetch('/status')
+		.then(res => {
+		  console.log("[GUI] /status response:", res.status, res.statusText);
+		  return res.text().then(text => {
+			try {
+			  const data = JSON.parse(text);
+			  console.log("[GUI] Parsed JSON:", data);
+
+			  if (!res.ok) throw new Error("SCADA /status returned non-200");
+			  return data;
+			} catch (e) {
+			  console.error("[GUI] Failed to parse JSON:", e, "Raw body:", text);
+			  throw new Error("Invalid JSON from SCADA");
+			}
+		  });
+		})
+		.then(data => {
+		  const status = data.state || "UNKNOWN";
+		  const el = document.getElementById('breaker-status');
+		  el.textContent = "Breaker: " + status;
+		  el.className = status === "CLOSED" ? "status-ok"
+						: status === "OPEN"   ? "status-error"
+						: "status-warn";
+
+		  document.getElementById('last-updated').textContent =
+			"Last Updated: " + new Date().toLocaleTimeString();
+
+		  const box = document.getElementById('breaker-box');
+		  const label = document.getElementById('breaker-label');
+
+		  if (status === "CLOSED") {
+			box.setAttribute("fill", "#2ecc71");
+			label.textContent = "Breaker: CLOSED";
+		  } else if (status === "OPEN") {
+			box.setAttribute("fill", "#e74c3c");
+			label.textContent = "Breaker: OPEN";
+		  } else {
+			box.setAttribute("fill", "#f1c40f");
+			label.textContent = "Breaker: ???";
+		  }
+		})
+		.catch(err => {
+		  console.error("[GUI] Breaker status fetch failed:", err);
+
+		  const el = document.getElementById('breaker-status');
+		  el.textContent = "Breaker: UNKNOWN";
+		  el.className = "status-warn";
+
+		  document.getElementById("breaker-box").setAttribute("fill", "#f1c40f");
+		  document.getElementById("breaker-label").textContent = "Breaker: ???";
+		});
+	}
+
+
+
+	let lastStNum = null;
+
+	function updateGooseLog() {
+	  fetch('/goose-log')
+		.then(res => res.json())
+		.then(messages => {
+		  const log = document.getElementById('goose-log');
+		  log.innerHTML = "";
+		  let lastStNum = null;
+
+		  messages.forEach(msg => {
+			const div = document.createElement('div');
+			div.className = 'goose-entry';
+
+			const isTrip = msg.status === "TRIP";
+			const isReset = msg.status === "RESET";
+			const isSpoofed = msg.spoofed === true;
+			const isNewState = lastStNum !== null && msg.stNum !== lastStNum;
+
+			// Set colour style
+			let style = "";
+			if (isTrip) style += "color: #e74c3c;";
+			else if (isReset) style += "color: #2ecc71;";
+			if (isNewState) style += "background: #fdf6e3; font-weight: bold;";
+			if (isSpoofed) style += "background: #ffebee; color: #c62828;";
+
+			// Message format
+			const spoofLabel = isSpoofed ? " ⚠️ <strong>SPOOFED</strong>" : "";
+			div.setAttribute("style", style);
+			const sender = msg.role || "UNKNOWN";
+			div.innerHTML = `[${msg.timestamp}] ${msg.status}${spoofLabel} 
+			  <small style="color: #888;">from ${sender} (stNum: ${msg.stNum}, sqNum: ${msg.sqNum})</small>`;
+
+
+			log.appendChild(div);
+			lastStNum = msg.stNum;
+		  });
+
+		  log.scrollTop = log.scrollHeight;
+		})
+		.catch(err => {
+		  console.warn("Failed to update GOOSE log:", err);
+		});
+	}
+
+
+    function updateFaultBanner() {
+      fetch('/fault')
+        .then(res => res.json())
+        .then(data => {
+          const banner = document.getElementById('alarm-banner');
+          if (data.fault) {
+            banner.style.display = 'block';
+          } else {
+            banner.style.display = 'none';
+          }
+        });
+    }
+	
+
+	function toggleSVDetails() {
+	  const section = document.getElementById("sv-details");
+	  const link = event.target;
+	  if (section.style.display === "none") {
+		section.style.display = "block";
+		link.textContent = "Hide Details ▲";
+	  } else {
+		section.style.display = "none";
+		link.textContent = "Show Details ▼";
+	  }
+	}
+	
+	function updateHealth() {
+	  fetch('/health-overview-proxy')
+		.then(r => r.json())
+		.then(data => {
+			for (let key in data) {
+			  const el = document.getElementById(`health-${key}`);
+			  if (el) {
+				el.textContent = data[key] ? "🟢 OK" : "🔴 DOWN";
+				el.style.color = data[key] ? "#2ecc71" : "#e74c3c";
+			  }
+			}
+
+		  	const active = data.ied ? "C-IED1" : (data.ied2 ? "C-IED2" : "None");
+			document.getElementById("active-ied").textContent = active;
+
+			// Highlight active IED box and path
+			const ied1Box = document.getElementById("ied1-box");
+			const ied2Box = document.getElementById("ied2-box");
+			const ied1Line = document.getElementById("ied1-line");
+			const ied2Line = document.getElementById("ied2-line");
+			const ied1Breaker = document.getElementById("ied1-breaker");
+			const ied2Breaker = document.getElementById("ied2-breaker");
+
+			if (active === "C-IED1") {
+			  ied1Box.setAttribute("stroke", "#2ecc71");
+			  ied2Box.setAttribute("stroke", "#bbb");
+
+			  ied1Line.setAttribute("stroke", "#2ecc71");
+			  ied2Line.setAttribute("stroke", "#bbb");
+
+			  ied1Breaker.setAttribute("stroke", "#2ecc71");
+			  ied2Breaker.setAttribute("stroke", "#bbb");
+			}
+			else if (active === "C-IED2") {
+			  ied1Box.setAttribute("stroke", "#bbb");
+			  ied2Box.setAttribute("stroke", "#2ecc71");
+
+			  ied1Line.setAttribute("stroke", "#bbb");
+			  ied2Line.setAttribute("stroke", "#2ecc71");
+
+			  ied1Breaker.setAttribute("stroke", "#bbb");
+			  ied2Breaker.setAttribute("stroke", "#2ecc71");
+			}
+			else {
+			  ied1Box.setAttribute("stroke", "#bbb");
+			  ied2Box.setAttribute("stroke", "#bbb");
+
+			  ied1Line.setAttribute("stroke", "#bbb");
+			  ied2Line.setAttribute("stroke", "#bbb");
+
+			  ied1Breaker.setAttribute("stroke", "#bbb");
+			  ied2Breaker.setAttribute("stroke", "#bbb");
+			}
+
+		});
+	}
+
+	function updateLastTrip() {
+	  fetch('/last-trip')
+		.then(r => r.json())
+		.then(data => {
+		  const label = `${data.role ?? "N/A"} (${data.reason ?? "N/A"})`;
+		  document.getElementById("trip-source").textContent = label;
+		});
+	}
+
+	function updateProtectionStatus() {
+	  fetch('/protection-status')
+		.then(res => res.json())
+		.then(data => {
+		  const lock1 = data.p_ied1?.lockout;
+		  const lock2 = data.p_ied2?.lockout;
+
+		  const anyLocked = lock1 || lock2;
+		  const el = document.getElementById("lockout-warning");
+		  el.style.display = anyLocked ? "block" : "none";
+		});
+	}
+
+	function updateMMSStatus() {
+	  fetch('/mms-status')
+		.then(res => {
+		  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+		  return res.json();
+		})
+		.then(data => {
+		  const stVal = data.Pos?.stVal ?? "--";
+		  const ctlVal = data.Pos?.ctlVal ?? "--";
+		  const svQuality = data.sv?.quality ?? "--";
+		  const mode = data.mode ?? "--";
+		  const svRate = data.sv?.rate_hz ?? "--";
+
+		  // Update text
+		  document.getElementById("mms-stVal").textContent = stVal;
+		  document.getElementById("mms-ctlVal").textContent = ctlVal;
+		  document.getElementById("mms-mode").textContent = mode;
+		  document.getElementById("mms-sv-quality").textContent = svQuality;
+		  document.getElementById("mms-sv-rate").textContent = svRate;
+		  document.getElementById("mmxu-v-a").textContent = data.MMXU1?.PhV?.phsA?.mag?.f ?? "--";
+		  document.getElementById("mmxu-v-b").textContent = data.MMXU1?.PhV?.phsB?.mag?.f ?? "--";
+		  document.getElementById("mmxu-v-c").textContent = data.MMXU1?.PhV?.phsC?.mag?.f ?? "--";
+		  document.getElementById("mmxu-i-a").textContent = data.MMXU1?.A?.phsA?.mag?.f ?? "--";
+		  document.getElementById("mmxu-i-b").textContent = data.MMXU1?.A?.phsB?.mag?.f ?? "--";
+		  document.getElementById("mmxu-i-c").textContent = data.MMXU1?.A?.phsC?.mag?.f ?? "--";
+		  document.getElementById("mmxu-freq").textContent = data.MMXU1?.Freq ?? "--";
+		  document.getElementById("sv-timestamp").textContent = data.timestamp ?? "--";
+
+		  // Apply colour indicators
+		  const stValEl = document.getElementById("mms-stVal");
+		  const svQualityEl = document.getElementById("mms-sv-quality");
+
+		  stValEl.className = "status-light " + (stVal === "OPEN" ? "red-light" : stVal === "CLOSED" ? "green-light" : "yellow-light");
+
+		  if (svQuality === "GOOD") {
+			svQualityEl.className = "status-light green-light";
+		  } else if (svQuality === "LOST" || svQuality === "BAD") {
+			svQualityEl.className = "status-light red-light";
+		  } else {
+			svQualityEl.className = "status-light yellow-light";
+		  }
+		})
+		.catch(err => {
+			console.warn("MMS fetch error:", err);
+			["mms-stVal", "mms-ctlVal", "mms-mode", "mms-sv-quality", "mms-sv-rate"].forEach(id => {
+				document.getElementById(id).textContent = "ERR";
+				document.getElementById(id).className = "status-light red-light";
+		  });
+		});
+	}
+
+	function checkScadaStatus() {
+		fetch('/health-overview-proxy')
+			.then(res => {
+				const tripBtn = document.getElementById("trip-btn");
+				const resetBtn = document.getElementById("reset-btn");
+				const scadaWarning = document.getElementById("scada-warning");
+
+				if (res.ok) {
+					tripBtn.disabled = false;
+					resetBtn.disabled = false;
+					scadaWarning.style.display = "none";
+				} else {
+					throw new Error("SCADA is down");
+				}
+			})
+			.catch(err => {
+				console.warn("[GUI] SCADA health check failed:", err);
+
+				// Disable controls
+				document.getElementById("trip-btn").disabled = true;
+				document.getElementById("reset-btn").disabled = true;
+				document.getElementById("scada-warning").style.display = "block";
+
+				// Update SCADA and other device statuses
+				document.getElementById("health-scada").textContent = "🔴 DOWN";
+				document.getElementById("health-scada").style.color = "#e74c3c";
+
+				const unknownIds = [
+					"health-rtu", "health-ied", "health-ied2",
+					"health-p_ied1", "health-p_ied2", "health-breaker"
+				];
+
+				for (const id of unknownIds) {
+					const el = document.getElementById(id);
+					el.textContent = "❔ UNKNOWN";
+					el.style.color = "#f39c12";  // yellow
+				}
+
+				// Reset active IED display
+				document.getElementById("active-ied").textContent = "--";
+
+				// Visually unhighlight the IED paths
+				["ied1-box", "ied2-box", "ied1-line", "ied2-line", "ied1-breaker", "ied2-breaker"].forEach(id => {
+					const el = document.getElementById(id);
+					if (el) el.setAttribute("stroke", "#bbb");
+				});
+			});
+	}
+
+	function updateSystemLogs() {
+	  fetch("/system-logs-proxy")
+		.then(res => res.json())
+		.then(data => {
+		  const list = document.getElementById("log-list");
+		  list.innerHTML = "";
+
+		  data.slice().forEach(entry => {
+			const div = document.createElement("div");
+			div.className = "goose-entry";
+			div.innerHTML = `<span style="color:#888;">[${entry.timestamp}]</span> <strong>(${entry.source})</strong> ${entry.message}`;
+			list.appendChild(div);
+		  });
+
+		  // Auto-scroll to the bottom
+
+		})
+		.catch(err => console.log("Failed to fetch logs:", err));
+	}
+
+	let captureStartTime = null;
+	let timerInterval = null;
+	
+	function startCapture() {
+	  fetch('/ids/start-capture', { method: 'POST' })
+		.then(res => res.json())
+		.then(data => {
+		  console.log("Start capture response:", data);
+
+		  if (data && data.status && data.status.includes("capture")) {
+			captureStartTime = Date.now();
+			document.getElementById("recording-status").innerText = "🔴 Recording (0s)";
+			timerInterval = setInterval(() => {
+			  const elapsed = Math.floor((Date.now() - captureStartTime) / 1000);
+			  document.getElementById("recording-status").innerText = `🔴 Recording (${elapsed}s)`;
+			}, 1000);
+		  } else {
+			alert("⚠️ Unexpected start capture response.");
+		  }
+		})
+		.catch(err => {
+		  alert("❌ Failed to start capture: " + err);
+		});
+	}
+
+
+
+
+
+
+	function stopCapture() {
+	  fetch('/ids/stop-capture', { method: 'POST' })
+		.then(res => res.json())
+		.then(data => {
+		  if (data.file) {
+			document.getElementById("recording-status").innerText = "";
+			clearInterval(timerInterval);
+			captureStartTime = null;
+
+			setTimeout(() => {
+			  const url = `/ids/pcap/${data.file}`;
+			  const link = document.createElement("a");
+			  link.href = url;
+			  link.download = data.file;
+			  document.body.appendChild(link);
+			  link.click();
+			  document.body.removeChild(link);
+			  alert(`✅ Packet capture downloaded: ${data.file}`);
+			}, 500);
+		  } else {
+			alert("🛑 Capture stopped — no file returned.");
+		  }
+		})
+		.catch(err => {
+		  alert("❌ Failed to stop capture: " + err);
+		});
+	}
+
+
+	function updateIdsStatus() {
+	  fetch("/ids/status")
+		.then(res => res.json())
+		.then(data => {
+		  const el = document.getElementById("ids-status-indicator");
+		  if (data.status === "ok") {
+			el.textContent = "IDS: OK";
+			el.className = "status-light green-light";
+		  } else {
+			el.textContent = "IDS: DOWN";
+			el.className = "status-light red-light";
+		  }
+		})
+		.catch(err => {
+		  const el = document.getElementById("ids-status-indicator");
+		  el.textContent = "IDS: DOWN";
+		  el.className = "status-light red-light";
+		});
+	}
+
+
+
+
+
+
+	// Show "Initialising" banner briefly
+	document.getElementById("startup-banner").style.display = "block";
+	setTimeout(() => {
+	  document.getElementById("startup-banner").style.display = "none";
+	}, 4000);  // hide after 4 seconds
+
+	//setInterval(updateSpoofAlert, 3000);
+    setInterval(updateStatus, 2100);
+	setInterval(checkScadaStatus, 3500);
+    setInterval(updateGooseLog, 2200);
+    setInterval(updateFaultBanner, 2300);
+	setInterval(updateHealth, 3000);
+	setInterval(updateLastTrip, 2500);
+	setInterval(updateProtectionStatus, 5000);
+	setInterval(updateMMSStatus, 2600);
+	setInterval(updateSystemLogs, 2000);
+	setInterval(updateIdsStatus, 5000);
+	updateIdsStatus(); 
+	updateMMSStatus();
+	updateProtectionStatus();
+	updateLastTrip();
+	updateHealth();
+    updateStatus();
+    updateGooseLog();
+    updateFaultBanner();
+	loadFaultMode();
+  </script>
+</body>
+</html>

@@ -1,0 +1,144 @@
+services:
+  breaker:
+    build: ./breaker
+    container_name: breaker
+    environment:
+      - DEVICE_NAME=BREAKER  
+    networks:
+      otnet:
+        ipv4_address: 172.20.0.10
+    ports:
+      - "5007:5002"      
+
+  rtu:
+    build: ./rtu
+    container_name: rtu
+    environment:
+      - DEVICE_NAME=RTU  
+    networks:
+      otnet:
+        ipv4_address: 172.20.0.11
+
+  scada:
+    build: ./scada
+    container_name: scada
+    volumes:
+      - ./shared:/app/shared
+    environment:
+      - DEVICE_NAME=SCADA  
+    networks:
+      otnet:
+        ipv4_address: 172.20.0.12
+    ports:
+      - "5006:5001" 
+
+
+  ied:
+    build: ./ied1
+    container_name: ied
+    restart: always
+    environment:
+      - IED_MODE=active
+      - DEVICE_NAME=IED1
+    volumes:
+      - ./shared:/app/shared
+    networks:
+      otnet:
+        ipv4_address: 172.20.0.14
+    ports:
+      - "5003:5003" 
+      - "102:102" 
+    command: bash -c "./mms_server & gunicorn -w 1 -b 0.0.0.0:5003 ied1:app --threads 4 --log-level debug"
+
+
+  ied2:
+    build: ./ied2
+    container_name: ied2
+    restart: always
+    environment:
+      - IED_MODE=standby
+      - DEVICE_NAME=IED2
+    volumes:
+      - ./shared:/app/shared
+    networks:
+      otnet:
+        ipv4_address: 172.20.0.16
+    ports:
+      - "5009:5003"
+    command: gunicorn -w 1 -b 0.0.0.0:5003 ied2:app --threads 4 --log-level debug
+
+
+  gui:
+    build: ./gui
+    container_name: gui
+    environment:
+      - DEVICE_NAME=HMI  
+    networks:
+      otnet:
+        ipv4_address: 172.20.0.15
+    ports:
+      - "5005:5000"
+
+  mu:
+    build: ./mu
+    environment:
+      - DEVICE_NAME=MU  
+    container_name: mu
+    networks:
+      otnet:
+        ipv4_address: 172.20.0.20
+        
+  attacker:
+    image: kalilinux/kali-rolling
+    container_name: attacker
+    environment:
+      - DEVICE_NAME=ATTACKER  
+    command: sleep infinity && cd attacker && apt update && apt install python3 -y
+    volumes:
+      - ./attacker:/attacker    
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - otnet
+    tty: true
+
+  p_ied1:
+    build: ./p_ied
+    container_name: p_ied1
+    environment:
+      - DEVICE_NAME=P-IED1
+    networks:
+      otnet:
+        ipv4_address: 172.20.0.17
+
+  p_ied2:
+    build: ./p_ied
+    container_name: p_ied2
+    environment:
+      - DEVICE_NAME=P-IED2
+    networks:
+      otnet:
+        ipv4_address: 172.20.0.18
+
+  ids:
+    build: ./ids
+    container_name: ids
+    volumes:
+      - ./ids/logs:/app/logs
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      otnet:
+        ipv4_address: 172.20.0.21
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    ports:
+      - "5008:5005"
+
+
+
+networks:
+  otnet:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/24
