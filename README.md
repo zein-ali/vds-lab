@@ -40,13 +40,39 @@ This testbed includes the following Docker containers:
 2. **Start the testbed:**
 
    ```bash
-   sudo docker compose up --build
+   sudo docker compose up -d --build
    ```
 
 3. **Access the HMI:**
 
    Open your browser and go to:  
    [http://localhost:5005](http://localhost:5005)
+
+   Or if the Lab is hosted elsewhere on the network, you can use the host server's IP (ensure firewall rules dont block       the connection)
+   http://<Server IP>:5005
+
+4. **View Live Logs**
+
+   ```bash
+   sudo docker logs -f <Component Name>
+   ```
+
+5. **Access Bash Environment for any container (attacker for example)**
+
+For Attacker, use the following. For other containers, replace "attacker" with any other component name:
+
+   ```bash
+   sudo docker exec -it attacker bash
+   ```
+6. **Launch Attack**
+
+After you enter the bash environment from step 5, run the attacker script
+
+   ```bash
+   python3 attacker.py
+   ```
+
+You will be presented with option to select an attack. Upon launching an attack you will be able to see the effects on the HMI.
 
 ---
 
