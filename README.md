@@ -49,7 +49,7 @@ This testbed includes the following Docker containers:
    [http://localhost:5005](http://localhost:5005)
 
    Or if the Lab is hosted elsewhere on the network, you can use the host server's IP (ensure firewall rules dont block       the connection)
-   http://<Server-IP>:5005
+   "http://<Server-IP>:5005"
 
 4. **View Live Logs**
 
