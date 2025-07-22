@@ -67,13 +67,14 @@ This testbed includes the following Docker containers:
    ```
 7. **Launch Attack**
 
-After you enter the bash environment from step 5, run the attacker script
+   After you enter the bash environment from step 5, run the attacker script
 
    ```bash
    python3 attacker.py
    ```
 
-You will be presented with option to select an attack. Upon launching an attack you will be able to see the effects on the HMI.
+   You will be presented with option to select an attack. Upon launching an attack you will be able to see the effects on     the HMI.
+
 
 ---
 
@@ -83,7 +84,7 @@ You will be presented with option to select an attack. Upon launching an attack 
 - Simulated GOOSE, MMS, and SV message over UDP
 - Real-time GUI showing breaker status, logs, and device states
 - IDS to detect spoofed GOOSE and SV traffic
-- Basic attack simulations (e.g., spoofed TRIP commands, SV Spoof, Container/Device takedown)
+- Basic attack simulations (e.g., spoofed TRIP commands, SV Spoof, Flooding, Container/Device takedown)
 
 
 ---
