@@ -22,6 +22,7 @@ This testbed includes the following Docker containers:
 
 ## Requirements
 
+- Ubuntu 24.04.2 (other versions and distros untested)
 - Docker
 - Docker Compose
 
