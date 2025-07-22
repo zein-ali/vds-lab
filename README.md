@@ -113,6 +113,5 @@ GNU License
 
 ## Project Author
 
-- Developed as part of MSc Cyber Security Project 
-- University: Robert Gordon University
+- Developed as part of the MSc Cyber Security Project at Robert Gordon University
 - Author: Zein Ali
