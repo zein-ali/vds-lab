@@ -49,22 +49,23 @@ This testbed includes the following Docker containers:
    [http://localhost:5005](http://localhost:5005)
 
    Or if the Lab is hosted elsewhere on the network, you can use the host server's IP (ensure firewall rules dont block       the connection)
+   
    http://host-server-IP:5005
 
-4. **View Live Logs**
+5. **View Live Logs**
 
    ```bash
    sudo docker logs -f <Component Name>
    ```
 
-5. **Access Bash Environment for any container**
+6. **Access Bash Environment for any container**
 
    To access the Attacker, use the following. For other containers, replace "attacker" with any other component name:
 
    ```bash
    sudo docker exec -it attacker bash
    ```
-6. **Launch Attack**
+7. **Launch Attack**
 
 After you enter the bash environment from step 5, run the attacker script
 
