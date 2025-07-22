@@ -57,9 +57,9 @@ This testbed includes the following Docker containers:
    sudo docker logs -f <Component Name>
    ```
 
-5. **Access Bash Environment for any container (attacker for example)**
+5. **Access Bash Environment for any container**
 
-For Attacker, use the following. For other containers, replace "attacker" with any other component name:
+   To access the Attacker, use the following. For other containers, replace "attacker" with any other component name:
 
    ```bash
    sudo docker exec -it attacker bash
