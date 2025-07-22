@@ -40,7 +40,7 @@ This testbed includes the following Docker containers:
 2. **Start the testbed:**
 
    ```bash
-   docker compose up --build
+   sudo docker compose up --build
    ```
 
 3. **Access the HMI:**
