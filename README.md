@@ -1,11 +1,10 @@
-# vds-lab
-VDS-Lab: Virtual Digital Substation Cybersecurity Testbed
+## VDS-Lab: Virtual Digital Substation Cybersecurity Testbed
 
-VDS-Lab is a lightweight, modular, Docker-based virtual testbed that simulates a digital electrical substation. It supports key IEC 61850-inspired protocols (GOOSE, MMS, Sampled Values) and enables cybersecurity experimentation including spoofing and intrusion detection.
+**VDS-Lab** is a lightweight, modular, Docker-based virtual testbed that simulates a digital electrical substation. It supports key IEC 61850-inspired protocols (GOOSE, MMS, Sampled Values) and enables cybersecurity experimentation including spoofing and intrusion detection.
 
 ---
 
-Components
+## Components
 
 This testbed includes the following Docker containers:
 
@@ -21,35 +20,37 @@ This testbed includes the following Docker containers:
 
 ---
 
-Requirements
+## Requirements
 
 - Docker
 - Docker Compose
 
 ---
 
-How to Run
+## How to Run
 
-1. Clone the repository:
+1. **Clone the repository:**
 
-   git clone https://github.com/zein_ali/vds-lab.git
+   ```bash
+   git clone https://github.com/your-username/vds-lab.git
    cd vds-lab
+   ```
 
+2. **Start the testbed:**
 
-2. Start the testbed:
+   ```bash
+   docker compose up --build
+   ```
 
-   sudo docker compose up -d --build
-
-
-3. Access the HMI:
+3. **Access the HMI:**
 
    Open your browser and go to:  
-   http://localhost:5005
+   [http://localhost:5000](http://localhost:5000)
 
 ---
 
 
-Features
+## Features
 
 - Simulated GOOSE, MMS, and SV message over UDP
 - Real-time GUI showing breaker status, logs, and device states
@@ -59,7 +60,7 @@ Features
 
 ---
 
-Notes
+## Notes
 
 - All communication is simulated using Python over UDP multicast.
 - This is for educational and research purposes only.
@@ -69,11 +70,13 @@ Notes
 
 ---
 
+## License 
+
 GNU License
 
 ---
 
-Project Author
+## Project Author
 
 Developed as part of MSc Cyber Security Project 
 University: Robert Gordon University
