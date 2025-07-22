@@ -100,8 +100,7 @@ This testbed includes the following Docker containers:
 
 - All communication is simulated using Python over UDP multicast.
 - This is for educational and research purposes only.
-
-- This initial version of VDS-Lab is unpolished and has significant scope for improvement and enhancement. 
+- This initial version of VDS-Lab has significant room for improvement and enhancement. 
 - Since this lab has been uploaded as open-source, I encourage developers and students to take this lab to the next level of realism and functionality.
 
 ---
