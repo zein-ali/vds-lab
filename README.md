@@ -45,7 +45,7 @@ This testbed includes the following Docker containers:
 3. **Access the HMI:**
 
    Open your browser and go to:  
-   [http://localhost:5000](http://localhost:5000)
+   [http://localhost:5005](http://localhost:5005)
 
 ---
 
