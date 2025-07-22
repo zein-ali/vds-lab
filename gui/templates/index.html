@@ -210,7 +210,7 @@
 	  <div class="controls">
 		<button onclick="startCapture()">Start Capture</button>
 		<button onclick="stopCapture()">Stop Capture</button>
-		<button onclick="window.open('http://ids:5005/report', '_blank')">View Report</button>
+		<button id="reportbtn">View Report</button>
 		<span id="ids-status-indicator" class="status-light yellow-light" style="margin-left: 12px;">IDS: UNKNOWN</span>
 	  </div>
 	</div>
@@ -748,9 +748,13 @@
 		});
 	}
 
-
-
-
+	 const currentHost = window.location.hostname;
+	
+	    const targetUrl = `http://${currentHost}:5005/report`;
+	
+	    document.getElementById("reportbtn").onclick = function () {
+	        window.location.href = targetUrl;
+	    };
 
 
 	// Show "Initialising" banner briefly
