@@ -32,7 +32,7 @@ This testbed includes the following Docker containers:
 1. **Clone the repository:**
 
    ```bash
-   git clone https://github.com/your-username/vds-lab.git
+   git clone https://github.com/zein-ali/vds-lab.git
    cd vds-lab
    ```
 
