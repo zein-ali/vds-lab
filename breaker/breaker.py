@@ -15,7 +15,7 @@ MCAST = '224.1.1.1'
 PORT = 10200
 
 state = "CLOSED"
-fault_simulation = True
+fault_simulation = False
 
 app = Flask(__name__)
 
