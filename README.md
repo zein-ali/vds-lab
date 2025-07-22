@@ -22,7 +22,14 @@ This testbed includes the following Docker containers:
 
 ## Requirements
 
+**System requirements**
+
 - Ubuntu 24.04.2 (other versions and distros untested)
+- 10GB free space (this accounts for images and dependencies)
+- 2GB RAM
+
+**Dependencies**
+
 - Docker
 - Docker Compose
 
