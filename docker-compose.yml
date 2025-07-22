@@ -89,11 +89,10 @@ services:
         ipv4_address: 172.20.0.20
         
   attacker:
-    image: kalilinux/kali-rolling
+    build: ./attacker
     container_name: attacker
     environment:
       - DEVICE_NAME=ATTACKER  
-    command: sleep infinity && cd attacker && apt update && apt install python3 -y
     volumes:
       - ./attacker:/attacker    
       - /var/run/docker.sock:/var/run/docker.sock
