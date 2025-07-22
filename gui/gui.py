@@ -145,7 +145,6 @@ def proxy_system_logs():
         print("[GUI] Failed to proxy system logs:", e)
         return jsonify([]), 500
 
-# ---- PLACE HOLDERS - UPDATE ----
 
 @app.route("/spoof-alert")
 def spoof_alert():
@@ -159,7 +158,6 @@ def protection_status():
         "last_trip_source": "p_ied1"
     })
 
-# ---- PLACE HOLDERS - UPDATE ----
 
 @app.route('/status')
 def get_status():
