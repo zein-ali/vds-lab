@@ -11,7 +11,7 @@ This testbed includes the following Docker containers:
 - `scada`: Central SCADA system
 - `hmi`: Human-Machine Interface
 - `rtu`: Remote Terminal Unit
-- `c-ied1`, `c-ied2`: Primary and backup Control IEDs
+- `ied`, `ied2`: Primary and backup Control IEDs
 - `p-ied1`, `p-ied2`: Protection IEDs
 - `mu`: Merging Unit 
 - `breaker`: Circuit breaker
