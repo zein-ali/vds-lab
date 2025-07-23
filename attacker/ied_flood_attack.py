@@ -61,9 +61,9 @@ def sv_flood():
             "Ia": random.uniform(-5000, 5000),
             "Ib": random.uniform(-5000, 5000),
             "Ic": random.uniform(-5000, 5000),
-            "Ua": 230.0,
-            "Ub": 230.0,
-            "Uc": 230.0
+            "Ua": random.uniform(-10000, 10000),
+            "Ub": random.uniform(-10000, 10000),
+            "Uc": random.uniform(-10000, 10000)
         }
         s.sendto(json.dumps(msg).encode(), (SV, PORT["sv"]))
         i += 1
